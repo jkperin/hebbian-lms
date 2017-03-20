@@ -9,7 +9,7 @@ classdef NeuralNetwork < handle
         mu % adaptation constant
         S % output each hidden layer
         Y % output each hidden layer
-        outputFcn='sigmoid' % function of output layer neurons: {'linear', 'sigmoid', 'softmax'} 
+        outputFcn='softmax' % function of output layer neurons: {'linear', 'sigmoid', 'softmax'} 
         hiddenFcn='sigmoid' % function of hidden layers neurons: {'sigmoid'}
         dataPartitioning = [0.7 0 0.3] % how much is allocated for training, validation, and testing
     end   
@@ -61,7 +61,7 @@ classdef NeuralNetwork < handle
             self.set_functions(); % set hidden and output layers functions
             
             % Partition the data in training, validation, and testing sets
-            [train, valid, test] = self.partition_data(X, D); 
+            [train, valid, test] = self.partition_data(X, D); % Partitioning is not random
             
             if varargin{1} < 1 % interpret varargin as minimum error rate for training
                 min_error = varargin{1};
@@ -95,7 +95,7 @@ classdef NeuralNetwork < handle
                 end
 
                 train.error(n+1) = self.test(train.X, train.d);
-                fprintf('- Training cycle = %d\n', n)
+                fprintf('- Training cycle #%d\n', n)
                 fprintf('Training error = %G\n', train.error(n+1))
                 if self.dataPartitioning(2) ~= 0
                     valid.error(n+1) = self.test(valid.X, valid.d);
@@ -103,26 +103,26 @@ classdef NeuralNetwork < handle
                 end
                 if self.dataPartitioning(3) ~= 0
                     test.error(n+1) = self.test(test.X, test.d);
-                    fprintf('Validation error = %G\n', test.error(n+1))  
+                    fprintf('Testing error = %G\n', test.error(n+1))  
                 end                        
                 n = n + 1;
             end
             
             % Plot learning curve
             if (length(varargin) == 1 && n > 2) || (length(varargin) == 2 && varargin{2} && n > 2) % whether to plot learning curve
-                figure, box on
-                plot(1:n-1, train.error(2:n), 'LineWidth', 2, 'DisplayName', 'Training error')
+                figure(1), hold on, box on
+                plot(1:n-1, train.error(2:n), 'LineWidth', 2, 'DisplayName', sprintf('%s: Training error', algorithm))
                 if self.dataPartitioning(2) ~= 0
-                    plot(1:n-1, valid.error(2:n), 'LineWidth', 2, 'DisplayName', 'Validation error')
+                    plot(1:n-1, valid.error(2:n), 'LineWidth', 2, 'DisplayName', sprintf('%s: Validation error', algorithm))
                 end
                 if self.dataPartitioning(3) ~= 0
-                    plot(1:n-1, test.error(2:n), 'LineWidth', 2, 'DisplayName', 'Testing error')
+                    plot(1:n-1, test.error(2:n), 'LineWidth', 2, 'DisplayName', sprintf('%s: Testing error', algorithm))
                 end
                 xlabel('Training cycles')
                 ylabel('Error rate %')
                 legend('-dynamiclegend')
                 set(gca, 'FontSize', 12)
-                title(sprintf('Learning curve using %s', algorithm))
+                drawnow
             end
         end
         
@@ -321,26 +321,33 @@ classdef NeuralNetwork < handle
         end 
         
         function [train, valid, test] = partition_data(self, X, d)
-            %% Partition data randomly into trainig, validation, and testing
+            %% Partition data into trainig, validation, and testing
             % Partition ratios are given by the property dataPartitioning
+            % Patitioning is not random. To partition the data randomly, it
+            % is necessary to scramble X and d first
             N = size(X, 2);
-            idx = randperm(N);
-            if self.dataPartitioning(1) == 1
-                train.idx = idx(1:floor(self.dataPartitioning(1)*N));
-                train.X = X(:, train.idx);
-                train.d = d(:, train.idx);
-                
-                valid = train;
-                test = train;
+            
+            % Training
+            train.idx = 1:self.dataPartitioning(1)*N;
+            train.X = X(:, train.idx);
+            train.d = d(:, train.idx);
+            idxend = train.idx(end);
+            
+            % Validation
+            if self.dataPartitioning(2) == 0
+                valid = [];
             else
-                train.idx = idx(1:floor(self.dataPartitioning(1)*N));
-                valid.idx = idx(train.idx(end) + (1:floor(self.dataPartitioning(2)*N)));
-                test.idx = idx(valid.idx(end)+1:N);
-
-                train.X = X(:, train.idx);
-                train.d = d(:, train.idx);
+                valid.idx = idxend + (1:self.dataPartitioning(2)*N);
                 valid.X = X(:, valid.idx);
                 valid.d = d(:, valid.idx);
+                idxend = valid.idx(end);
+            end
+            
+            % Testing
+            if self.dataPartitioning(3) == 0
+                test = [];
+            else
+                test.idx = idxend + (1:self.dataPartitioning(3)*N);
                 test.X = X(:, test.idx);
                 test.d = d(:, test.idx);
             end
