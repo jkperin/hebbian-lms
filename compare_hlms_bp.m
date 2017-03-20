@@ -7,7 +7,7 @@ numHiddenLayers = 3;        % number of hidden layers
 numNeuronsHL = 50;         % number of neurons in the hidden layers
 dimInputVector = 50;       % dimensionality of input vector space
 Nclusters = 50;            % number of clusters
-Npatterns = 20;            % number of patterns per cluster
+Npatterns = 40;            % number of patterns per cluster
 NdisturbClusters = 3;      % number of clusters not not included in training
 
 % Generate centroids whose coordinates are uniformly distributed in [-D, D] 
@@ -29,15 +29,15 @@ D = [Dtrain Dval Dtest];
 
 % Original Hebbian-LMS (HLMS)
 seed = rng;
-HLMSoriginal = NeuralNetwork(numHiddenLayers, numNeuronsHL, Nclusters, 10e-3);
+HLMSoriginal = NeuralNetwork(numHiddenLayers, numNeuronsHL, Nclusters, 7e-3);
 HLMSoriginal.dataPartitioning = dataPartitioning;  % all for training
 % Backpropagation
 rng(seed); % reset seed of RNG so that both networks have same initial conditions
-BP = NeuralNetwork(numHiddenLayers, numNeuronsHL, Nclusters, 1e-3); % 0.5e-3 for sigmoid
+BP = NeuralNetwork(numHiddenLayers, numNeuronsHL, Nclusters, 0.3e-3); % 0.5e-3 for sigmoid
 BP.dataPartitioning = dataPartitioning;  % all for training
 
 % Choose output layer
-output_layer_fun = 'softmax';
+output_layer_fun = 'sigmoid';
 Dtrain = D;
 if strcmpi(output_layer_fun, 'sigmoid')
     disp('Using sigmoid function in output layer (on-out-of-many code)')
