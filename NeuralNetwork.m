@@ -23,7 +23,7 @@ classdef NeuralNetwork < handle
     
     properties (Constant, Hidden)
         minTol = 1e-9;
-        maxNcycles = 300;
+        maxNcycles = 150;
     end
       
     methods
@@ -111,12 +111,12 @@ classdef NeuralNetwork < handle
             % Plot learning curve
             if (length(varargin) == 1 && n > 2) || (length(varargin) == 2 && varargin{2} && n > 2) % whether to plot learning curve
                 figure(1), hold on, box on
-                plot(1:n-1, train.error(2:n), 'LineWidth', 2, 'DisplayName', sprintf('%s: Training error', algorithm))
+                plot(1:n-1, 100*train.error(2:n), 'LineWidth', 2, 'DisplayName', sprintf('%s: Training error', algorithm))
                 if self.dataPartitioning(2) ~= 0
-                    plot(1:n-1, valid.error(2:n), 'LineWidth', 2, 'DisplayName', sprintf('%s: Validation error', algorithm))
+                    plot(1:n-1, 100*valid.error(2:n), 'LineWidth', 2, 'DisplayName', sprintf('%s: Validation error', algorithm))
                 end
                 if self.dataPartitioning(3) ~= 0
-                    plot(1:n-1, test.error(2:n), 'LineWidth', 2, 'DisplayName', sprintf('%s: Testing error', algorithm))
+                    plot(1:n-1, 100*test.error(2:n), 'LineWidth', 2, 'DisplayName', sprintf('%s: Testing error', algorithm))
                 end
                 xlabel('Training cycles')
                 ylabel('Error rate %')
