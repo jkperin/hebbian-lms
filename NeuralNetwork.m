@@ -10,7 +10,7 @@ classdef NeuralNetwork < handle
         S % output each hidden layer
         Y % output each hidden layer
         outputFcn='softmax' % function of output layer neurons: {'linear', 'sigmoid', 'softmax'} 
-        hiddenFcn='sigmoid' % function of hidden layers neurons: {'sigmoid'}
+        hiddenFcn='sigmoid' % function of hidden layers neurons: {'sigmoid', 'rectifier'}
         dataPartitioning = [0.7 0 0.3] % how much is allocated for training, validation, and testing
     end   
     
@@ -287,6 +287,9 @@ classdef NeuralNetwork < handle
                 case 'sigmoid'
                     self.fHL = @(x) self.sigmoid(x);
                     self.dfHL = @(x) self.dsigmoid(x);
+                case 'rectifier'
+                    self.fHL = @(x) max(x, 0);
+                    self.dfHL = @(x) (sign(x)+1)/2;
                 otherwise
                     error('NeuralNetwork/get_functions: invalid hidden layer function')
             end

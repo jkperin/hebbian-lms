@@ -7,8 +7,8 @@ numHiddenLayers = 3;        % number of hidden layers
 numNeuronsHL = 50;         % number of neurons in the hidden layers
 dimInputVector = 50;       % dimensionality of input vector space
 Nclusters = 50;            % number of clusters
-Npatterns = 40;            % number of patterns per cluster
-NdisturbClusters = 3;      % number of clusters not not included in training
+Npatterns = 200;            % number of patterns per cluster
+NdisturbClusters = 0;      % number of clusters not not included in training
 
 % Generate centroids whose coordinates are uniformly distributed in [-D, D] 
 % of each dimension of the input vector space
@@ -33,15 +33,15 @@ HLMSoriginal = NeuralNetwork(numHiddenLayers, numNeuronsHL, Nclusters, 7e-3);
 HLMSoriginal.dataPartitioning = dataPartitioning;  % all for training
 % Backpropagation
 rng(seed); % reset seed of RNG so that both networks have same initial conditions
-BP = NeuralNetwork(numHiddenLayers, numNeuronsHL, Nclusters, 0.3e-3); % 0.5e-3 for sigmoid
+BP = NeuralNetwork(numHiddenLayers, numNeuronsHL, Nclusters, 0.5e-4); % 0.5e-3 for sigmoid
 BP.dataPartitioning = dataPartitioning;  % all for training
 
 % Choose output layer
-output_layer_fun = 'sigmoid';
-Dtrain = D;
+output_layer_fun = 'softmax';
+Dch = D;
 if strcmpi(output_layer_fun, 'sigmoid')
     disp('Using sigmoid function in output layer (on-out-of-many code)')
-    Dtrain = 2*D - 1;  % make outputs {-1, 1}
+    Dch = 2*D - 1;  % make outputs {-1, 1}
 else
     disp('Using softmax function at output layer')
 end
@@ -50,11 +50,11 @@ end
 tic
 disp('Hebbian-LMS-Original')
 HLMSoriginal.set_functions('sigmoid', output_layer_fun)
-HLMSoriginal.train(X, Dtrain, 'Hebbian-LMS', 0.01, true); % for sigmoid output layer
+HLMSoriginal.train(X, Dch, 'Hebbian-LMS', 0.01, true); % for sigmoid output layer
 toc, tic
 disp('Backpropagation')
 BP.set_functions('sigmoid', output_layer_fun)
-BP.train(X, Dtrain, 'Backpropagation', 0.01, true); % for sigmoid output layer
+BP.train(X, Dch, 'Backpropagation', 0.01, true); % for sigmoid output layer
 toc
 
 %% Compare with Matlab's neural network (output layer is softmax)
