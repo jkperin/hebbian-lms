@@ -3,7 +3,7 @@ clear, clc, close all
 
 dimInputVector = 3;        % dimensionality of input vector space
 Nclusters = 20;            % number of clusters
-Npatterns = 100;           % number of patterns per cluster
+Npatterns = 40;           % number of patterns per cluster
 NdisturbClusters = 0;      % number of clusters not not included in training
 
 % Generate centroids whose coordinates are uniformly distributed in [-D, D] 

@@ -23,7 +23,7 @@ classdef NeuralNetwork < handle
     
     properties (Constant, Hidden)
         minTol = 1e-9;
-        maxNcycles = 150;
+        maxNcycles = 1e3;
     end
       
     methods
@@ -221,28 +221,11 @@ classdef NeuralNetwork < handle
                 dout(:, k) = self.forward(X(:, k));
             end        
 
-            switch self.outputFcn % Output layer output function
-                case 'softmax' 
-                    dval = dout;
-                    dout = zeros(size(dval));
-                    for k = 1:size(dval, 2)
-                        [~, idx] = max(dval(:, k));
-                        dout(idx, k) = 1;
-                    end
-                case 'sigmoid'
-                    if any(any(D < 0)) % in case D is [-1, 1]
-                        dout = sign(dout); 
-                    else % in case D is [0, 1]
-                        dout = dout < 0.5;
-                    end
-                case 'linear' 
-                    if any(any(D < 0)) % in case D is [-1, 1]
-                        dout = sign(dout); 
-                    else  % in case D is [0, 1]
-                        dout = dout < 0.5;
-                    end
-                otherwise
-                    error('NeuralNetwork/test: invalid output function')
+            dval = dout;
+            dout = zeros(size(dval));
+            for k = 1:size(dval, 2)
+                [~, idx] = max(dval(:, k));
+                dout(idx, k) = 1;
             end
             
             error_rate = sum(any(dout ~= D, 1))/size(D, 2);

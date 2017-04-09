@@ -7,7 +7,7 @@ numHiddenLayers = 3;        % number of hidden layers
 numNeuronsHL = 50;         % number of neurons in the hidden layers
 dimInputVector = 50;       % dimensionality of input vector space
 Nclusters = 50;            % number of clusters
-Npatterns = 200;            % number of patterns per cluster
+Npatterns = 100;            % number of patterns per cluster
 NdisturbClusters = 0;      % number of clusters not not included in training
 
 % Generate centroids whose coordinates are uniformly distributed in [-D, D] 
@@ -18,7 +18,7 @@ Omega = sqrt((2*D)^2/12); % standard deviation of centroids
 sigma = rho*Omega;        % standard deviation of the cluster points.
 
 % Generate \Nclusters\ clusters with \Npatterns\ patterns per cluster
-dataPartitioning = [0.5 0 0.5]; % 50% for training, 0% for validation, and 50% for testing
+dataPartitioning = [0.2 0 0.8]; % 50% for training, 0% for validation, and 50% for testing
 [Xtrain, Dtrain, C] = generate_clusters(dimInputVector, Nclusters, dataPartitioning(1)*Npatterns, Omega, sigma, NdisturbClusters);
 [Xval, Dval] = generate_clusters(dimInputVector, Nclusters, dataPartitioning(2)*Npatterns, C, sigma);
 [Xtest, Dtest] = generate_clusters(dimInputVector, Nclusters, dataPartitioning(3)*Npatterns, C, sigma);
@@ -29,32 +29,25 @@ D = [Dtrain Dval Dtest];
 
 % Original Hebbian-LMS (HLMS)
 seed = rng;
-HLMSoriginal = NeuralNetwork(numHiddenLayers, numNeuronsHL, Nclusters, 7e-3);
+HLMSoriginal = NeuralNetwork(numHiddenLayers, numNeuronsHL, Nclusters, 0.5e-3);
 HLMSoriginal.dataPartitioning = dataPartitioning;  % all for training
 % Backpropagation
 rng(seed); % reset seed of RNG so that both networks have same initial conditions
-BP = NeuralNetwork(numHiddenLayers, numNeuronsHL, Nclusters, 0.5e-4); % 0.5e-3 for sigmoid
+BP = NeuralNetwork(numHiddenLayers, numNeuronsHL, Nclusters, 0.5e-3); % 0.5e-3 for sigmoid
 BP.dataPartitioning = dataPartitioning;  % all for training
 
 % Choose output layer
-output_layer_fun = 'softmax';
-Dch = D;
-if strcmpi(output_layer_fun, 'sigmoid')
-    disp('Using sigmoid function in output layer (on-out-of-many code)')
-    Dch = 2*D - 1;  % make outputs {-1, 1}
-else
-    disp('Using softmax function at output layer')
-end
+output_layer_fun = 'sigmoid';
 
 %% Training
 tic
 disp('Hebbian-LMS-Original')
 HLMSoriginal.set_functions('sigmoid', output_layer_fun)
-HLMSoriginal.train(X, Dch, 'Hebbian-LMS', 0.01, true); % for sigmoid output layer
+HLMSoriginal.train(X, D, 'Hebbian-LMS', 0.01, true); % for sigmoid output layer
 toc, tic
 disp('Backpropagation')
 BP.set_functions('sigmoid', output_layer_fun)
-BP.train(X, Dch, 'Backpropagation', 0.01, true); % for sigmoid output layer
+BP.train(X, D, 'Backpropagation', 0.01, true); % for sigmoid output layer
 toc
 
 %% Compare with Matlab's neural network (output layer is softmax)
