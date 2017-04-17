@@ -9,6 +9,7 @@ classdef NeuralNetwork < handle
         mu % adaptation constant
         S % output each hidden layer
         Y % output each hidden layer
+        gamma = 0.3 % Gamma parameter of Hebbian-LMS neuron
         outputFcn='softmax' % function of output layer neurons: {'linear', 'sigmoid', 'softmax'} 
         hiddenFcn='sigmoid' % function of hidden layers neurons: {'sigmoid', 'rectifier'}
         dataPartitioning = [0.7 0 0.3] % how much is allocated for training, validation, and testing
@@ -64,8 +65,9 @@ classdef NeuralNetwork < handle
             [train, valid, test] = self.partition_data(X, D); % Partitioning is not random
             
             if varargin{1} < 1 % interpret varargin as minimum error rate for training
-                min_error = varargin{1};
+%                 min_error = varargin{1};
                 condition = @(x, n) x > min_error && n < self.maxNcycles;
+%                 condition = @(x, n) n < self.maxNcycles;
                 Ncycles = Inf;
             else % interpret varargin as maximum number of training cycles
                 Ncycles = varargin{1}; 
@@ -78,7 +80,7 @@ classdef NeuralNetwork < handle
                     trainingAlg = @(net, X, D) backpropagation(net, X, D);
                 case 'hebbian-lms'
                     trainingAlg = @(net, X, D) hebbian_lms(net, X, D);
-                case 'hebbian-lms-modified'
+                case 'modified-hebbian-lms'
                     trainingAlg = @(net, X, D) hebbian_lms_modified(net, X, D);
                 otherwise
                     error('NeuralNetwork: invalid training algorithm')
@@ -111,12 +113,12 @@ classdef NeuralNetwork < handle
             % Plot learning curve
             if (length(varargin) == 1 && n > 2) || (length(varargin) == 2 && varargin{2} && n > 2) % whether to plot learning curve
                 figure(1), hold on, box on
-                plot(1:n-1, 100*train.error(2:n), 'LineWidth', 2, 'DisplayName', sprintf('%s: Training error', algorithm))
+                hplot = plot(1:n-1, 100*train.error(2:n), 'LineWidth', 2, 'DisplayName', sprintf('%s: Training error', algorithm));
                 if self.dataPartitioning(2) ~= 0
-                    plot(1:n-1, 100*valid.error(2:n), 'LineWidth', 2, 'DisplayName', sprintf('%s: Validation error', algorithm))
+                    plot(1:n-1, 100*valid.error(2:n), ':', 'Color', get(hplot, 'Color'), 'LineWidth', 2, 'DisplayName', sprintf('%s: Validation error', algorithm))
                 end
                 if self.dataPartitioning(3) ~= 0
-                    plot(1:n-1, 100*test.error(2:n), 'LineWidth', 2, 'DisplayName', sprintf('%s: Testing error', algorithm))
+                    plot(1:n-1, 100*test.error(2:n), '--', 'Color', get(hplot, 'Color'), 'LineWidth', 2, 'DisplayName', sprintf('%s: Testing error', algorithm))
                 end
                 xlabel('Training cycles')
                 ylabel('Error rate %')
@@ -126,28 +128,24 @@ classdef NeuralNetwork < handle
             end
         end
         
-        function hebbian_lms_modified(self, X, D, gamma)
+        function hebbian_lms_modified(self, X, D)
             %% Hebbian-LMS with modified gradient estimate
             % Inputs:
             % - X: input vector
             % - D: desired response
             % - gamma (optional, default = 0.3): slope of line in
-            % Hebbian-LMS used to compute the error
-            if not(exist('gamma', 'var'))
-                gamma = 0.3;
-            end
-            
+            % Hebbian-LMS used to compute the error           
             self.forward(X); % calculate responses for input X
             
             % Updates first layer
             X = [X; zeros(self.numNeuronsHL-size(X, 1), 1)];
-            delta = -(self.Y{1} - gamma*self.S{1}).*(self.dfHL(self.S{1})  - gamma);
+            delta = -(self.Y{1} - self.gamma*self.S{1}).*(self.dfHL(self.S{1})  - self.gamma);
             self.W{1} = self.W{1} + 2*self.mu*delta*X.';
             self.b{1} = self.b{1} + 2*self.mu*delta;    
             
             % Remaining hidden layers
             for layer = 2:self.numHiddenLayers
-                delta = -(self.Y{layer} - gamma*self.S{layer}).*(self.dfHL(self.S{layer})  - gamma);
+                delta = -(self.Y{layer} - self.gamma*self.S{layer}).*(self.dfHL(self.S{layer})  - self.gamma);
                 self.W{layer} = self.W{layer} + 2*self.mu*delta*self.Y{layer-1}.';
                 self.b{layer} = self.b{layer} + 2*self.mu*delta;                 
             end
@@ -158,28 +156,24 @@ classdef NeuralNetwork < handle
             self.b{end} = self.b{end} + 2*self.mu*delta;
         end
         
-        function hebbian_lms(self, X, D, gamma)
+        function hebbian_lms(self, X, D)
             %% Hebbian-LMS with original gradient estimate
             % Inputs:
             % - X: input vector
             % - D: desired response
             % - gamma (optional, default = 0.3): slope of line in
-            % Hebbian-LMS used to compute the error
-            if not(exist('gamma', 'var'))
-                gamma = 0.3;
-            end
-            
+            % Hebbian-LMS used to compute the error            
             self.forward(X); % calculate responses for input X
             
             % Updates first layer
             X = [X; zeros(self.numNeuronsHL-size(X, 1), 1)];
-            delta = (self.Y{1} - gamma*self.S{1});
+            delta = (self.Y{1} - self.gamma*self.S{1});
             self.W{1} = self.W{1} + 2*self.mu*delta*X.';
             self.b{1} = self.b{1} + 2*self.mu*delta;    
             
             % Remaining hidden layers
             for layer = 2:self.numHiddenLayers
-                delta = (self.Y{layer} - gamma*self.S{layer});
+                delta = (self.Y{layer} - self.gamma*self.S{layer});
                 self.W{layer} = self.W{layer} + 2*self.mu*delta*self.Y{layer-1}.';
                 self.b{layer} = self.b{layer} + 2*self.mu*delta;                 
             end
@@ -214,21 +208,20 @@ classdef NeuralNetwork < handle
             self.b{1} = self.b{1} + 2*self.mu*delta{1};            
         end
         
-        function [error_rate, dout] = test(self, X, D)
+        function [error_rate, outputs] = test(self, X, D)
             %% Test neural network with the target response D
-            dout = zeros(size(D));
+            outputs = zeros(size(D));
             for k = 1:size(X, 2)
-                dout(:, k) = self.forward(X(:, k));
+                outputs(:, k) = self.forward(X(:, k));
             end        
 
-            dval = dout;
-            dout = zeros(size(dval));
-            for k = 1:size(dval, 2)
-                [~, idx] = max(dval(:, k));
-                dout(idx, k) = 1;
+            decisions = zeros(size(outputs));
+            for k = 1:size(outputs, 2)
+                [~, idx] = max(outputs(:, k));
+                decisions(idx, k) = 1;
             end
-            
-            error_rate = sum(any(dout ~= D, 1))/size(D, 2);
+
+            error_rate = sum(any(decisions ~= D, 1))/size(D, 2);
         end
         
         function [y, Sout] = forward(self, X, verbose)
@@ -283,7 +276,8 @@ classdef NeuralNetwork < handle
                     % prior to sigmoid i.e., it is the output of the sum
                     self.fO = @(x) self.sigmoid(x);
                     self.errorO = @(S, D) (D - S); %(d - self.S{end});
-                case 'softmax'
+%                     self.errorO = @(S, D) (D - self.sigmoid(S)); % error computed after sigmoid
+                case 'softmax' % loss function is cross-entropy
                     self.fO = @(x) exp(x)/sum(exp(x));
                     self.errorO  = @(S, D) (D - exp(S)/sum(exp(S))); % Note: D(i) in this case represents 1{y == i}
                 case 'linear'
@@ -339,19 +333,22 @@ classdef NeuralNetwork < handle
             end
         end
         
-        function obj = reset(obj)
+        function obj = reset(obj, Wrange)
             %% Reset weights of neural network            
+            if not(exist('Wrange', 'var'))
+                Wrange = 1;
+            end
             obj.W = cell(obj.numHiddenLayers+1, 1);
             obj.b = cell(obj.numHiddenLayers+1, 1);
             obj.S = cell(obj.numHiddenLayers+1, 1);
             obj.Y = cell(obj.numHiddenLayers+1, 1);
             for k = 1:obj.numHiddenLayers
-                obj.W{k} = sqrt(12)*(rand(obj.numNeuronsHL)-0.5); % uniformly distributed with variance 1
+                obj.W{k} = 2*Wrange*(rand(obj.numNeuronsHL)-0.5); % uniformly distributed in [-1, 1]
                 obj.b{k} = zeros(obj.numNeuronsHL, 1);
                 obj.S{k} = zeros(obj.numNeuronsHL, 1);
                 obj.Y{k} = zeros(obj.numNeuronsHL, 1);
             end
-            obj.W{obj.numHiddenLayers+1} = sqrt(12)*(rand(obj.numNeuronsOut, obj.numNeuronsHL)-0.5); % uniformly distributed with variance 1
+            obj.W{obj.numHiddenLayers+1} = 2*Wrange*(rand(obj.numNeuronsOut, obj.numNeuronsHL)-0.5); % uniformly distributed in [-1, 1]
             obj.b{obj.numHiddenLayers+1} = zeros(obj.numNeuronsOut, 1);
             obj.S{obj.numHiddenLayers+1} = zeros(obj.numNeuronsOut, 1);
             obj.Y{obj.numHiddenLayers+1} = zeros(obj.numNeuronsOut, 1);
