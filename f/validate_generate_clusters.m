@@ -9,7 +9,7 @@ NdisturbClusters = 0;      % number of clusters not not included in training
 % Generate centroids whose coordinates are uniformly distributed in [-D, D] 
 % of each dimension of the input vector space
 D = 2;                      
-rho = 0.2;                % ratio of standard deviation of centroids and standard deviation of the cluster points.
+rho = 0.1;                % ratio of standard deviation of centroids and standard deviation of the cluster points.
 Omega = sqrt((2*D)^2/12); % standard deviation of centroids
 sigma = rho*Omega;        % standard deviation of the cluster points.
 

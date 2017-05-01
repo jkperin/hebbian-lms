@@ -1,4 +1,4 @@
-function [X, D, C, idx] = generate_clusters(Ndim, Nclusters, Npatterns, centroidParam, sigma, NdisturbClusters)
+function [X, D, C, Cidx] = generate_clusters(Ndim, Nclusters, Npatterns, centroidParam, sigma)
 %% Generate \Nclusters\ clusters in \Ndim\-dimensional space.
 % Inputs:
 % - Ndim: dimensionality of input vector space
@@ -8,13 +8,11 @@ function [X, D, C, idx] = generate_clusters(Ndim, Nclusters, Npatterns, centroid
 % distributed uniformly in the \Ndim\-dimensional space
 % - sigma: standard deviation of patterns (vectors) in each cluster. Vectors 
 % are normally distributed about the centroid
-% - NdisturbClusters (optional, default = 0): number of centroids added as
-% disturbance. They not appear in X.
 % Outputs:
 % X: vectors
 % D: desired response 
 % C: centroids
-% idx: indices to recover random permutation
+% Cidx: indices of input vectors i.e., X(:, 1) belongs to centroid Cidx(1)
 
 if length(centroidParam) == 1 % if clusterParam is scalar, generate centroids
     Omega = centroidParam;
@@ -29,14 +27,10 @@ if Npatterns == 0 % if no pattern was assigned
     idx = 1:Nclusters;
 end
 
-if not(exist('NdisturbClusters', 'var'))
-    NdisturbClusters = 0;
-end
-
-X = sigma*randn(Ndim, (Nclusters-NdisturbClusters)*Npatterns);
-D = zeros(Nclusters, (Nclusters-NdisturbClusters)*Npatterns);
+X = sigma*randn(Ndim, Nclusters*Npatterns);
+D = zeros(Nclusters, Nclusters*Npatterns);
 n = 1;
-for cluster = 1:Nclusters-NdisturbClusters
+for cluster = 1:Nclusters
     for pattern = 1:Npatterns
         X(:, n) = C(:, cluster) + X(:, n); % X(:, Npatterns*(cluster-1) + (1:Npatterns)) = bsxfun(@plus, X(:, Npatterns*(cluster-1) + (1:Npatterns)), C(:, cluster));
         D(cluster, n) = 1;
@@ -45,6 +39,8 @@ for cluster = 1:Nclusters-NdisturbClusters
 end
 
 % Randomly permute clusters
-idx = randperm((Nclusters-NdisturbClusters)*Npatterns);
+idx = randperm(Nclusters*Npatterns);
+Cidx = reshape(repmat((1:Nclusters), Npatterns, 1), 1, Nclusters*Npatterns);
 X = X(:, idx);
 D = D(:, idx);
+Cidx = Cidx(idx);
