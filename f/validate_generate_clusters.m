@@ -2,7 +2,7 @@
 clear, clc, close all
 
 dimInputVector = 3;        % dimensionality of input vector space
-Nclusters = 6;            % number of clusters
+Nclusters = 50;            % number of clusters
 Npatterns = 50;           % number of patterns per cluster
 NdisturbClusters = 0;      % number of clusters not not included in training
 
@@ -15,7 +15,7 @@ sigma = rho*Omega;        % standard deviation of the cluster points.
 
 % Generate \Nclusters\ clusters with \Npatterns\ patterns per cluster
 dataPartitioning = [0.5 0 0.5]; % 50% for training, 0% for validation, and 50% for testing
-[Xtrain, Dtrain, C] = generate_clusters(dimInputVector, Nclusters, dataPartitioning(1)*Npatterns, Omega, sigma, NdisturbClusters);
+[Xtrain, Dtrain, C] = generate_clusters(dimInputVector, Nclusters, dataPartitioning(1)*Npatterns, Omega, sigma);
 [Xval, Dval] = generate_clusters(dimInputVector, Nclusters, dataPartitioning(2)*Npatterns, C, sigma);
 [Xtest, Dtest] = generate_clusters(dimInputVector, Nclusters, dataPartitioning(3)*Npatterns, C, sigma);
 

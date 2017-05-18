@@ -334,36 +334,76 @@ classdef NeuralNetwork < handle
             end
         end
         
-        function Consis = consistency(self, X, C, verbose)
-            %% Calculate the consistency of each layer. Consistency is defined as the number of binary words per cluster
+        function [Consis, Nwords] = consistency(self, X, Cidx, C, verbose)
+            %% Calculate the consistency of each layer. Consistency is defined as the number of distinct binary words per cluster
+            % Inputs:
+            % - X: input patterns
+            % - Cidx: cluster that each input pattern belongs to
+            % - C: centroids
+            % - verbose (optional, default=false): whether to plot results
+            % Outputs
+            % - Consis: consistency of each cluster i.e., how many distinct
+            % binary words represent that cluster
+            % - Nwords: number of unique binary words at the output of each
+            % layer
             X = [X; zeros(self.numNeuronsHL-size(X, 1), size(X, 2))];
                  
-            Nclusters = max(C);
+            Nclusters = max(Cidx);
             Consis = zeros(Nclusters, self.numHiddenLayers);
+            Nwords = zeros(1, self.numHiddenLayers);
             
             % First layer
             Stemp{1} = bsxfun(@plus, self.W{1}*X, self.b{1});
             Ytemp{1} = self.fHL(Stemp{1});
             Dtemp{1} = sign(Ytemp{1});
-            Consis(:, 1) = calc_layer_consistency(C, Dtemp{1}, Nclusters);
+            Consis(:, 1) = calc_layer_consistency(Cidx, Dtemp{1}, Nclusters);
+            uniqueBwords = unique(Dtemp{1}.', 'rows');
+            hammingDistance{1} = hist(self.numNeuronsHL*pdist(uniqueBwords, 'hamming'), 0:self.numNeuronsHL);
+            Nwords(1) = size(uniqueBwords, 1);
             
             % Remaining hidden layers
             for layer = 2:self.numHiddenLayers
                 Stemp{layer} = bsxfun(@plus, self.W{layer}*Ytemp{layer-1}, self.b{layer});
                 Ytemp{layer} = self.fHL(Stemp{layer});
                 Dtemp{layer} = sign(Ytemp{layer});
-                Consis(:, layer) = calc_layer_consistency(C, Dtemp{layer}, Nclusters);
+                Consis(:, layer) = calc_layer_consistency(Cidx, Dtemp{layer}, Nclusters);
+                uniqueBwords = unique(Dtemp{layer}.', 'rows');
+                hammingDistance{layer} = hist(self.numNeuronsHL*pdist(uniqueBwords, 'hamming'), 0:self.numNeuronsHL);
+                Nwords(layer) = size(uniqueBwords, 1);
             end
-
+            
+            % Overlaps
+            for b = 1:size(uniqueBwords, 1)
+                idx = all(bsxfun(@eq, Dtemp{end}, uniqueBwords(b, :).')); % indeces of patterns with uniqueBwords(n, :) binary word
+                uniqueCidx = unique(Cidx(idx)); % cluster indeces that have binary word uniqueBwords(n, :)
+                if numel(uniqueCidx) > 1 % more than one cluster with same binary word
+                    table(categorical(uniqueCidx.'), Consis(uniqueCidx, end),...
+                        'VariableNames',{'Cluster' 'diff_binary_words'})               
+                    fprintf('Relative distances:\n')
+                    dists = pdist(C(:, uniqueCidx).', 'euclidean') % euclidean distances between clusters that share the same binary word
+                end 
+            end
+            
+            
             if exist('verbose', 'var') && verbose
                 figure(112)
                 for layer = 1:self.numHiddenLayers
                     subplot(self.numHiddenLayers, 1, layer), hold on, box on
-                    stem(1:self.numNeuronsHL, Consis(:, layer), 'fill')
+                    stem(1:Nclusters, Consis(:, layer), 'fill')
                     xlabel('Cluster', 'FontSize', 12)
                     ylabel('Distinct binary words', 'FontSize', 12)
                     title(sprintf('Layer: %d', layer))
                 end
+                
+                figure(113), hold on, box on
+                for layer = 1:self.numHiddenLayers
+                    subplot(self.numHiddenLayers, 1, layer), hold on, box on
+                    stem(0:self.numNeuronsHL, hammingDistance{layer}, 'fill')
+                    xlabel('Hamming distance', 'FontSize', 12)
+                    ylabel('# diff. binary words', 'FontSize', 12)
+                    title(sprintf('Layer: %d', layer))
+                end
+                
                 drawnow
             end
                         

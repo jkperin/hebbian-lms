@@ -5,17 +5,17 @@ rng(0)
 
 addpath f/                  % auxiliary functions folder
 
-numHiddenLayers = 3;        % number of hidden layers
-numNeuronsHL = 100;         % number of neurons in the hidden layers
+numHiddenLayers =2;        % number of hidden layers
+numNeuronsHL = 125;         % number of neurons in the hidden layers
 dimInputVector = 50;       % dimensionality of input vector space
 Nclusters = 100;            % number of clusters
-Npatterns = 100;            % number of patterns per cluster
+Npatterns = 40;            % number of patterns per cluster
 Nrealizations = 1;
 
 % Generate centroids whose coordinates are uniformly distributed in [-D, D] 
 % of each dimension of the input vector space
 D = 2;                      
-rho = 0.5;                % ratio of standard deviation of centroids and standard deviation of the cluster points.
+rho =0.75;                % ratio of standard deviation of centroids and standard deviation of the cluster points.
 Omega = sqrt((2*D)^2/12); % standard deviation of centroids
 sigma = rho*Omega;        % standard deviation of the cluster points.
 
@@ -25,10 +25,14 @@ Vspace = (2*D)^dimInputVector;
 dimInputVector*Vcluster/Vspace
 
 % Generate \Nclusters\ clusters with \Npatterns\ patterns per cluster
-dataPartitioning = [0.2 0 0.8]; % 50% for training, 0% for validation, and 50% for testing
+dataPartitioning = [0.5 0 0.5]; % 50% for training, 0% for validation, and 50% for testing
 [Xtrain, Dtrain, C, Cidx] = generate_clusters(dimInputVector, Nclusters, dataPartitioning(1)*Npatterns, Omega, sigma);
 [Xval, Dval] = generate_clusters(dimInputVector, Nclusters, dataPartitioning(2)*Npatterns, C, sigma);
 [Xtest, Dtest] = generate_clusters(dimInputVector, Nclusters, dataPartitioning(3)*Npatterns, C, sigma);
+
+Dist = pdist(C.', 'euclidean');
+minDist = min(Dist)
+newRho = sigma/minDist
 
 % Concatanate 
 X = [Xtrain Xval Xtest];
@@ -58,15 +62,15 @@ for n = 1:Nrealizations
     tic
     disp('Hebbian-LMS-Original')
     HLMSoriginal.set_functions('sigmoid', 'linear')
-    HLMSoriginal.train(X, D, 'Hebbian-LMS', [1e-3, 1e-3, 1e-3, 1e-3], 20); % for sigmoid output layer
-    ConsisHLMS = HLMSoriginal.consistency(Xtrain, Cidx, true)
-    % HLMSoriginal.train(X, D, 'Modified-Hebbian-LMS', 30, true); % for sigmoid output layer
-    toc, tic
-    disp('Backpropagation')
-    BP.set_functions('sigmoid', 'softmax')
-    BP.train(X, D, 'Backpropagation', [1e-3, 1e-3, 1e-3, 1e-3], 20); % for sigmoid output layer
-    ConsisBP = BP.consistency(Xtrain, Cidx, true)
-    toc
+    HLMSoriginal.train(X, D, 'Hebbian-LMS', 1e-3, 10); % for sigmoid output layer
+    [ConsisHLMS, Nwords] = HLMSoriginal.consistency(Xtrain, Cidx, C, true)
+% %     HLMSoriginal.train(X, D, 'Modified-Hebbian-LMS', 30, true); % for sigmoid output layer
+%     toc, tic
+%     disp('Backpropagation')
+%     BP.set_functions('sigmoid', 'softmax')
+%     BP.train(X, D, 'Backpropagation', 1e-3, 10); % for sigmoid output layer
+%     ConsisBP = BP.consistency(Xtrain, Cidx, true)
+%     toc
 end
 
 % axis([1 50 0 5])
