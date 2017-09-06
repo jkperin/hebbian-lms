@@ -523,22 +523,22 @@ classdef NeuralNetwork < handle
             end
         end
         
-        function obj = reset(obj, Wrange)
+        function obj = reset(obj, stdw)
             %% Reset weights of neural network            
-            if not(exist('Wrange', 'var'))
-                Wrange = 1;
+            if not(exist('stdw', 'var'))
+                stdw = 1;
             end
             obj.W = cell(obj.numHiddenLayers+1, 1);
             obj.b = cell(obj.numHiddenLayers+1, 1);
             obj.S = cell(obj.numHiddenLayers+1, 1);
             obj.Y = cell(obj.numHiddenLayers+1, 1);
             for k = 1:obj.numHiddenLayers
-                obj.W{k} = Wrange*(rand(obj.numNeuronsHL)-0.5); % uniformly distributed in [-Wrange/2, Wrange/2]
+                obj.W{k} = stdw*randn(obj.numNeuronsHL); 
                 obj.b{k} = zeros(obj.numNeuronsHL, 1);
                 obj.S{k} = zeros(obj.numNeuronsHL, 1);
                 obj.Y{k} = zeros(obj.numNeuronsHL, 1);
             end
-            obj.W{obj.numHiddenLayers+1} = Wrange*(rand(obj.numNeuronsOut, obj.numNeuronsHL)-0.5); %  uniformly distributed in [-Wrange/2, Wrange/2]
+            obj.W{obj.numHiddenLayers+1} = stdw*randn(obj.numNeuronsOut, obj.numNeuronsHL);
             obj.b{obj.numHiddenLayers+1} = zeros(obj.numNeuronsOut, 1);
             obj.S{obj.numHiddenLayers+1} = zeros(obj.numNeuronsOut, 1);
             obj.Y{obj.numHiddenLayers+1} = zeros(obj.numNeuronsOut, 1);

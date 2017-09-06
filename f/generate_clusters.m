@@ -16,7 +16,7 @@ function [X, D, C, Cidx] = generate_clusters(Ndim, Nclusters, Npatterns, centroi
 
 if length(centroidParam) == 1 % if clusterParam is scalar, generate centroids
     Omega = centroidParam;
-    C = sqrt(12)*Omega*(rand([Ndim, Nclusters]) - 0.5);
+    C = Omega*randn([Ndim, Nclusters]);
 else % otherwise, use centroids provided in C
     C = centroidParam;
 end
