@@ -6,14 +6,14 @@ classdef NeuralNetwork < handle
         numNeuronsOut % number of neurons in the output layer
         W % weights for the entire network
         b % bias weights for the entire network
-        S % output each hidden layer
-        Y % output each hidden layer
+        S % output of each hidden layer
+        Y % output of each hidden layer
         gamma = 0.3 % Gamma parameter of Hebbian-LMS neuron
         outputFcn='softmax' % function of output layer neurons: {'linear', 'sigmoid', 'softmax'} 
         hiddenFcn='sigmoid' % function of hidden layers neurons: {'sigmoid', 'rectifier'}
         dataPartitioning = [0.7 0 0.3] % how much is allocated for training, validation, and testing
     end   
-    
+       
     properties (Hidden)
         fHL % handle for output function of hidden layer neurons
         dfHL % handle for first derivative of output function of hidden layer neurons
@@ -40,7 +40,7 @@ classdef NeuralNetwork < handle
             
             obj.set_functions();
         end
-        
+       
         function [train, valid, test] = train(self, X, D, algorithm, adaptationConstant, varargin)
             %% Train neural network with inputs |X|, desired response |D|, and algorithm |algorithm|
             % Inputs:
@@ -128,90 +128,7 @@ classdef NeuralNetwork < handle
                 set(gca, 'FontSize', 12)
                 drawnow
             end
-        end
-
-        function [train, valid, test] = train_sequentially(self, X, D, Ncycles)
-            %% Train neural network with inputs |X|, desired response |D|, and algorithm |algorithm|
-            % Inputs:
-            % - X: input matrix. Each column of X is a input vector
-            % - D: desired response matrix. Each column of D is a desired
-            % output vector
-            % - algorithm: either 'backpropagation', 'hebbian-lms', or
-            % 'hebbian-lms-modified'
-            % - varargin{1}: has two meanings. If varargin < 1, varargin is
-            % interpreted as the desired training error rate. If varargin
-            % >= 1, varargin is interpreted as the number of training
-            % cycles i.e., how many times we go through the data (X, D).
-            % - varargin{2} (optional, default = true): whether to plot
-            % learning curve at the end of trainig
-            
-            self.set_functions(); % set hidden and output layers functions
-            
-            % Partition the data in training, validation, and testing sets
-            [train, valid, test] = self.partition_data(X, D); % Partitioning is not random
-              
-            disp('first layer')
-            for k = 1:Ncycles
-                for pattern = 1:size(train.X, 2)
-                    self.forward(train.X(:, pattern)); % calculate responses for input X
-
-                    % Updates first layer
-                    Xin = [train.X(:, pattern); zeros(self.numNeuronsHL-size(X, 1), 1)];
-                    delta = (self.Y{1} - self.gamma*self.S{1});
-                    self.W{1} = self.W{1} + 2*self.mu*delta*Xin.';
-                    self.b{1} = self.b{1} + 2*self.mu*delta;   
-                end
-            end
-            disp('hidden layers')
-            for layer = 2:self.numHiddenLayers % train hidden layers
-                for k = 1:Ncycles
-                    for pattern = 1:size(train.X, 2)
-                        self.forward(train.X(:, pattern)); % calculate responses for input X
-
-                        % Updates first layer
-                        delta = (self.Y{layer} - self.gamma*self.S{layer});
-                        self.W{layer} = self.W{layer} + 2*self.mu*delta*self.Y{layer-1}.';
-                        self.b{layer} = self.b{layer} + 2*self.mu*delta;       
-                    end
-                end
-            end
-                
-            disp('train output layer')
-            for k = 1:Ncycles
-                for pattern = 1:size(train.X, 2)
-                    self.forward(train.X(:, pattern)); % calculate responses for input X
-
-                    % Updates output layer
-                    delta = self.errorO(self.S{end}, train.d(:, pattern)); 
-                    self.W{end} = self.W{end} + 2*self.mu*delta*self.Y{end-1}.';
-                    self.b{end} = self.b{end} + 2*self.mu*delta;       
-
-                    train.error(k) = self.test(train.X, train.d);
-                    test.error(k) = self.test(test.X, test.d);
-
-                    fprintf('- Training cycle #%d\n', k)
-                    fprintf('Training error = %G\n', train.error(k))    
-                    test.error(k) = self.test(test.X, test.d);
-                    fprintf('Testing error = %G\n', test.error(k))  
-                end
-            end
-            
-            % Plot learning curve
-            figure(1), hold on, box on
-            hplot = plot(1:n-1, 100*train.error(2:n), 'LineWidth', 2, 'DisplayName', sprintf('%s: Training error', algorithm));
-            if self.dataPartitioning(2) ~= 0
-                plot(1:n-1, 100*valid.error(2:n), ':', 'Color', get(hplot, 'Color'), 'LineWidth', 2, 'DisplayName', sprintf('%s: Validation error', algorithm))
-            end
-            if self.dataPartitioning(3) ~= 0
-                plot(1:n-1, 100*test.error(2:n), '--', 'Color', get(hplot, 'Color'), 'LineWidth', 2, 'DisplayName', sprintf('%s: Testing error', algorithm))
-            end
-            xlabel('Training cycles')
-            ylabel('Error rate %')
-            legend('-dynamiclegend')
-            set(gca, 'FontSize', 12)
-            drawnow
-        end
-        
+        end        
         
         function hebbian_lms_modified(self, X, D, mu)
             %% Hebbian-LMS with modified gradient estimate
@@ -260,7 +177,7 @@ classdef NeuralNetwork < handle
             for layer = 2:self.numHiddenLayers
                 delta = (self.Y{layer} - self.gamma*self.S{layer});
                 self.W{layer} = self.W{layer} + 2*mu(layer)*delta*self.Y{layer-1}.';
-                self.b{layer} = self.b{layer} + 2*mu(layer)*delta;                 
+                self.b{layer} = self.b{layer} + 2*mu(layer)*delta; 
             end
             
             % Output layer
@@ -560,6 +477,23 @@ classdef NeuralNetwork < handle
             title('Sigmoids output')
             xlabel('Hidden layer')
         end
+        
+        function plot_outputs2(self, X)
+            %% Plot output of 1st neuron of all hidden layers
+            figure(109), clf
+            x = linspace(-5, 5, 25);
+            for k = 1:length(self.S)-1
+                figure(109), subplot(2, 2, k), hold on
+                plot(x, self.fHL(x), 'k')
+                for n = 1:size(X, 2)
+                    self.forward(X(:, n));
+                    plot(self.S{k}(1), self.Y{k}(1), '.b')
+                end
+                title(sprintf('layer = %d', k))
+                drawnow
+            end
+        end
+        
     end
 end
     

@@ -32,7 +32,7 @@ classdef Layer < handle
                         
         function obj = init(obj)
             %% Reset weights of neural network            
-            obj.W = sqrt(12)*obj.Wstd*(rand(obj.numNeurons, obj.numInputs)-0.5); % uniformly distributed with standard deviation Wstd
+            obj.W = obj.Wstd*(randn(obj.numNeurons, obj.numInputs)); % normally distributed with standard deviation Wstd
             obj.b = zeros(obj.numNeurons, 1);
             obj.S = zeros(obj.numNeurons, 1);
             obj.Y = zeros(obj.numNeurons, 1);
@@ -51,6 +51,9 @@ classdef Layer < handle
                     self.fO = @(x) self.sigmoid(x);
                     self.errorO = @(S, D) (D - S); %(d - self.S{end});
 %                     self.errorO = @(S, D) (D - self.sigmoid(S)); % error computed after sigmoid
+                case 'norm sigmoid'
+                    self.fO = @(x) 1/N*self.sigmoid(x);
+                    self.errorO = @(S, D) (D - 1/N*S); %(d - self.S{end});
                 case 'softmax' % loss function is cross-entropy
                     self.fO = @(x) exp(x)/sum(exp(x));
                     self.errorO  = @(S, D) (D - exp(S)/sum(exp(S))); % Note: D(i) in this case represents 1{y == i}
