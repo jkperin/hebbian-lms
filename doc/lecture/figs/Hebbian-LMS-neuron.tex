@@ -1,0 +1,78 @@
+\def\layersep{0.5cm}
+\def\outsep{0.7cm}
+\def\dy{0.5}
+
+\begin{tikzpicture}[>=stealth, shorten >= 0pt, draw=black!50, node distance=\layersep, font=\sffamily]
+    \tikzstyle{node}=[circle,fill=black,minimum size=2pt,inner sep=0pt]
+    \tikzstyle{weight}=[draw=black,circle,fill=none,minimum size=3pt,inner sep=0pt,scale=0.5]
+    \tikzstyle{summer}=[weight,scale=1.8, minimum size=15pt]
+    \tikzstyle{sigmoid}=[draw=black,rectangle,fill=none,minimum size=20pt,inner sep=0pt]
+    \tikzstyle{annot} = [scale=0.5]
+
+	\node[summer] (Adder) at (3*\layersep,-\dy*2.5 cm) {\large $\Sigma$}; 
+    \node[node, inner sep=0pt] (mid) at (4.5*\layersep,-\dy*2.5 cm) {}; 
+    \node[sigmoid] (SGM) at (6*\layersep,-\dy*2.5 cm) {\resizebox{18pt}{!}{\input{figs/sigmoid.tex}}}; % Draw the hidden layer 
+    \node[node, inner sep=0pt] (output-tap) at (7.3*\layersep,-\dy*2.5 cm) {};
+    \coordinate (output) at (8*\layersep,-\dy*2.5 cm) {};
+    \node[summer, minimum size=10pt, scale=1] (error) at (6*\layersep,-\dy*5 cm) {$\Sigma$}; 
+    \coordinate (xw) at (4.5*\layersep,-\dy*5 cm) {};
+    \coordinate (out) at (7.3*\layersep,-\dy*5 cm) {};
+    \node[weight,fill=white, scale=1.5] (gamma) at (4.5*\layersep,-\dy*4 cm) {$\gamma$};
+    \coordinate (error-out) at (6*\layersep,-\dy*6 cm) {};
+    
+    \coordinate (A) at (\layersep,-6*\dy cm) {};
+    \coordinate (B) at (\layersep,\dy cm) {};
+    \path[->] (A) edge (B);
+    \path[-] (error) edge (error-out);
+    \path[-] (error-out) edge (A);
+        
+    \foreach \name / \y in {0,...,3} {
+    % This is the same as writing \foreach \name / \y in {1/1,2/2,3/3,4/4}
+        \node[node] (I-\name) at (0,-\dy*\y) {}; % Draw the input layer nodes
+        \node[weight,fill=white] (W-\name) at (\layersep,-\dy*\y cm) {$W_{k\name}$}; % Draw the hidden layer  layer node     
+     }   	
+
+	\node[node] (I-4) at (0,-5*\dy cm) {}; % Draw the hidden layer 
+	\node[weight, fill=white] (W-4) at (\layersep,-5*\dy cm) {$W_{kn}$};
+	
+    %% Annotations
+    \node[scale=0.5] at (-0.3,0) {$+1$};
+    \node[scale=0.5] at (-0.3,-\dy) {$X_{k1}$};
+    \node[scale=0.5] at (-0.3,-\dy*2) {$X_{k2}$};
+    \node[scale=0.5] at (-0.3,-\dy*3) {$X_{k3}$};
+    \node[scale=0.5] at (-0.3,-\dy*5) {$X_{kn}$};
+    \node[scale=0.5] at (-0.3,-\dy*3.75) {$\vdots$};
+    
+    \node[font=\fontsize{3}{3}\selectfont] at (6*\layersep-7,-\dy*4.7 cm) {$-$};
+    \node[font=\fontsize{3}{3}\selectfont] at (6*\layersep+7,-\dy*4.7 cm) {$+$};
+    \node[annot] at (3*\layersep+7,-\dy*5.7 cm) {error $\epsilon_k$};
+    \node[annot] at (4.3*\layersep,-\dy*2 cm) {$(X_k^TW_k)$};
+    \node[annot] at (8.7*\layersep,-\dy*2.5 cm) {Output};
+    \node[annot] at (6*\layersep,-\dy*3.5 cm) {Sigmoid};
+    
+    \foreach \name in {0,...,4} {
+    		\path[->] (I-\name) edge (W-\name);
+            \path[->] (W-\name) edge (Adder);
+     }
+	
+    \path[-] (Adder) edge (mid);
+    \path[->] (mid) edge (SGM);
+    \path[->] (mid) edge (gamma);
+    \path[-] (gamma) edge (xw);
+    \path[->] (xw) edge (error);
+    \path[-] (SGM) edge (output-tap);
+    \path[->] (output-tap) edge (output);
+    \path[-] (output-tap) edge (out);
+    \path[->] (out) edge (error);
+    
+    \draw[-,decoration={brace,mirror,raise=5pt},decorate, thick]
+   (-0.35,-0.7*\dy) -- node[annot, left=5pt, text width = 1cm, align=center] {$X_k$ input} (-0.35,-\dy*5.2);
+   
+   \node[draw=black, inner sep=5pt, fill=blue2!20, above=0.5cm of SGM, text width=5cm, align=left, scale=0.6] (eq1) {Hebbian-LMS algorithm  \begin{equation*}
+   	\begin{cases}
+   	W_{k+1} = W_k + 2\mu\epsilon_kX_k \\ 
+   	\epsilon_k = \mathrm{SGM}(X_k^TW_k) - \gamma(X_k^TW_k)
+   	\end{cases}
+   	\end{equation*}
+   };
+\end{tikzpicture}

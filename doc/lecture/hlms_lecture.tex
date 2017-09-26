@@ -1,0 +1,305 @@
+\documentclass[10pt]{beamer}
+\usefonttheme{professionalfonts}
+%\usetheme{CambridgeUS}
+%
+% Choose how your presentation looks.
+%
+% For more themes, color themes and font themes, see:
+% http://deic.uab.es/~iblanes/beamer_gallery/index_by_theme.html
+%
+\mode<presentation>
+{
+  \usetheme{default}      % or try Darmstadt, Madrid, Warsaw, ...
+  \usecolortheme{beaver} % or try albatross, beaver, crane, ...
+  \usefonttheme{default}  % or try serif, structurebold, ...
+  \setbeamertemplate{navigation symbols}{}
+  \setbeamertemplate{caption}[numbered]
+} 
+
+\usepackage[english]{babel}
+\usepackage[utf8x]{inputenc}
+\usepackage{tikz}
+\usepackage{pgfplots}
+\usepackage{array}  % for table column M
+\usepackage{makecell} % to break line within a cell
+\usepackage{verbatim}
+\usepackage{graphicx}
+\usepackage{subcaption}
+\usepackage{amsfonts}
+\usepackage{amsmath}
+\usepackage{bm}
+\usepackage{epstopdf}
+\captionsetup{compatibility=false}
+%\usepackage{dsfont}
+\usepackage[absolute,overlay]{textpos}
+\usetikzlibrary{calc}
+\usetikzlibrary{pgfplots.fillbetween, backgrounds}
+\usetikzlibrary{positioning}
+
+\usetikzlibrary{pgfplots.groupplots}
+\usetikzlibrary{plotmarks}
+\usetikzlibrary{calc}
+
+\usepgfplotslibrary{groupplots}
+\pgfplotsset{compat=newest} 
+%\pgfplotsset{plot coordinates/math parser=false}
+
+\usepackage{hyperref}
+\hypersetup{
+    colorlinks=true,
+    linkcolor=blue,
+    filecolor=magenta,      
+    urlcolor=cyan,
+}
+
+%% 
+%\def\EXTERNALIZE{1} % for externalizing figures
+\input{header.tex}
+
+\DeclareRobustCommand\sampleline[1]{%
+	\tikz\draw[#1] (0,0) (0,\the\dimexpr\fontdimen22\textfont2\relax)
+	-- (2em,\the\dimexpr\fontdimen22\textfont2\relax);%
+}
+
+%%
+\title[The Hebbian-LMS Algorithm]{Hebbian Learning and the LMS Algorithm}
+\author{Prof. Bernard Widrow \\ Jose Krause Perin \\ Hakim Mesiwala \\ Youngsik Kim \\ Dookun Park}
+\institute{\normalsize Department of Electrical Engineering \\ Stanford University}
+\date{IEEE SCV \textbullet~September 26, 2017}
+
+\begin{document}
+
+\begin{frame}
+  \titlepage
+\end{frame}
+
+\begin{frame}{Adaptive linear neuron (Adaline)}
+\begin{center}
+	\includegraphics[page=2,width=0.95\textwidth, trim={2cm 1.75cm 2cm 1.5cm}, clip]{figures.pdf}
+\end{center}
+\end{frame}
+
+\begin{frame}{Knobby Adaline, 1959}
+\begin{center}
+	\includegraphics[page=3,width=0.95\textwidth, trim={2cm 2.5cm 2cm 1.5cm}, clip]{figures.pdf}
+\end{center}
+\end{frame}
+
+\begin{frame}{Bootstrap learning}
+\begin{center}
+	\includegraphics[page=4,width=0.95\textwidth, trim={0.5cm 3.9cm 0.5cm 1.5cm}, clip]{figures.pdf}
+\end{center}
+\end{frame}
+
+\begin{frame}{Bootstrap learning}
+\begin{center}
+	\includegraphics[page=5,width=0.95\textwidth, trim={0.5cm 2.5cm 0.5cm 1.5cm}, clip]{figures.pdf}
+\end{center}
+\end{frame}
+
+\begin{frame}{Bootstrap learning}
+\begin{center}
+	\includegraphics[page=6,width=0.95\textwidth, trim={0.5cm 2.5cm 0.5cm 1.5cm}, clip]{figures.pdf}
+\end{center}
+\end{frame}
+
+\begin{frame}{Decision-directed learning for channel equalization}
+\begin{center}
+	\includegraphics[page=7,width=0.95\textwidth, trim={1cm 0.75cm 1cm 1.5cm}, clip]{figures.pdf}
+\end{center}
+\end{frame}
+
+\begin{frame}{Eye diagrams}
+\begin{center}
+	\includegraphics[page=8,width=\textwidth, trim={0.4cm 4.5cm 0.4cm 1.5cm}, clip]{figures.pdf}
+\end{center}
+\end{frame}
+
+\begin{frame}{Training neurons with bootstrap learning}
+\begin{center}
+	\resizebox{\textwidth}{!}{\input{figs/Hebbian-LMS-neuron}}
+\end{center}
+\end{frame}
+
+\begin{frame}{Equilibrium points of Hebbian-LMS}
+\begin{center}
+	\resizebox{0.95\textwidth}{!}{\input{figs/hebbian-lms-output}}
+\end{center}
+\end{frame}
+
+\begin{frame}{Hebbian-LMS learning process}
+\large Random initial weights: some input patterns produce {\color{green2} \textbf{positive output}}, while others produce {\color{orange2} \textbf{negative output}}
+\begin{center}
+	\resizebox{0.85\textwidth}{!}{\input{figs/learning_exp_intial_conditions}}
+\end{center}
+\end{frame}
+
+\begin{frame}{Hebbian-LMS learning process}
+\large After 10 training cycles
+\begin{center}
+	\resizebox{0.85\textwidth}{!}{\input{figs/learning_exp_cycles10}}
+\end{center}
+\end{frame}
+
+\begin{frame}{Hebbian-LMS learning process}
+\large After 100 training cycles
+\begin{center}
+	\resizebox{0.85\textwidth}{!}{\input{figs/learning_exp_cycles100}}
+\end{center}
+\end{frame}
+
+\begin{frame}{Hebbian-LMS learning process}
+\large After 200 training cycles
+\begin{center}
+	\resizebox{0.85\textwidth}{!}{\input{figs/learning_exp_cycles200}}
+\end{center}
+\end{frame}
+
+\begin{frame}{Hebbian-LMS learning process}
+\large Learning curve
+\begin{center}
+	\resizebox{0.85\textwidth}{!}{\input{figs/learning_exp_learning_curve}}
+\end{center}
+\end{frame}
+
+%16
+\begin{frame}{An example of layered neural network}
+\begin{center}
+	\resizebox{\textwidth}{!}{\input{figs/neural-network}}
+\end{center}
+\end{frame}
+
+\begin{frame}{First layer: hyperplane separation of input pattern space}
+\begin{center}
+	\begin{figure}[t!]
+		\centering
+		\begin{subfigure}[h!]{0.5\textwidth}
+			\resizebox{0.75\linewidth}{!}{\input{figs/clusters-a.tex}}\caption{}
+		\end{subfigure}%
+		~ 
+		\begin{subfigure}[h!]{0.5\textwidth}
+			\resizebox{0.75\linewidth}{!}{\input{figs/clusters-b.tex}}\caption{}
+		\end{subfigure}
+		
+		\begin{subfigure}[h!]{0.5\textwidth}
+			\resizebox{0.75\linewidth}{!}{\input{figs/clusters-c.tex}}\caption{}
+		\end{subfigure}%
+		~ 
+		\begin{subfigure}[h!]{0.5\textwidth}
+			\resizebox{0.75\linewidth}{!}{\input{figs/clusters-d.tex}}\caption{}
+		\end{subfigure}   
+	\end{figure}
+\end{center}
+\end{frame}
+
+\begin{frame}{Statistical pattern classification}
+\begin{equation*}
+	\rho = \frac{\text{standard deviation of patterns in each cluster}}{\text{average distance between centroids}} \tag{difficulty metric}
+\end{equation*}
+\begin{center}
+	\resizebox{0.75\textwidth}{!}{\input{figs/clusters_example}}
+\end{center}
+Example of 4 clusters in 2-D
+\end{frame}
+
+\begin{frame}{LMS capacity}
+\begin{block}{Single neuron}
+	\begin{equation*}
+	\text{Capacity} = \text{number of weights}
+	\end{equation*}
+\end{block}
+
+\begin{block}{Layered network}
+	\begin{equation*}
+	\text{Capacity} = \text{number of weights of output-layer neuron}
+	\end{equation*}
+\end{block}
+
+\end{frame}
+
+\begin{frame}{Good practice for hyper-parameter selection}
+\begin{itemize}
+\item The input patterns should be normalized to have zero mean and unit variance
+
+\item The adaptation ratio of each neuron should be
+\begin{equation*}
+	\mu = \frac{0.1}{\text{number of the neuron's weights}}
+\end{equation*} 
+\item The Hebbian-LMS parameter $\gamma$ should be between 0.3 to 0.5
+
+\item The initial weights of each neuron may be Gaussian distributed with zero mean and variance 
+\begin{equation*}
+	\sigma_w^2 = \frac{\gamma^2}{4}
+\end{equation*} 
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Statistical pattern classification}
+
+Classification error for 100 clusters in 50-dimensional space
+
+Neural network had 3 hidden layers with 150 neurons/hidden layer.
+
+\begin{center}
+	\resizebox{0.7\textwidth}{!}{\input{figs/hlms_rho}}
+\end{center}
+
+Training set had 20 samples/cluster, while test set had 80 samples/cluster.
+% (\sampleline{}) error on the training set
+% (\sampleline{dashed}) error on the test set
+\end{frame}
+
+
+\begin{frame}{A biological form of Hebbian-LMS}
+\begin{center}
+	\includegraphics[page=12,width=\textwidth, trim={0.5cm 2.5cm 0.5cm 1.25cm}, clip]{figures.pdf}
+\end{center}
+\end{frame}
+
+\begin{frame}{Hidden layers: clustering example}
+\begin{center}
+	\includegraphics[page=21,width=\textwidth, trim={0.2cm 3.75cm 0.2cm 1.5cm}, clip]{figures.pdf}
+\end{center}
+\large 50-dimensional input vectors plotted among the first two principal components.
+\end{frame}
+
+\begin{frame}{Hidden layers: clustering example}
+\begin{center}
+\includegraphics[page=22,width=\textwidth, trim={0.2cm 3.75cm 0.2cm 1.5cm}, clip]{figures.pdf}
+\end{center}
+\large Histogram of responses of a selected neuron in the output layer of a
+three-layer Hebbian-LMS network.
+\end{frame}
+
+\begin{frame}{Hidden layers: clustering example}
+\begin{center}
+\includegraphics[page=23,width=\textwidth, trim={0.2cm 3.75cm 0.2cm 1.5cm}, clip]{figures.pdf}
+\end{center}
+\large Histogram of responses of a selected neuron in the output layer of a three-layer Hebbian-LMS network.
+\end{frame}
+
+\begin{frame}{A synapse corresponding to a variable weight}
+\begin{center}
+	\includegraphics[page=25,width=\textwidth, trim={0.5cm 3.5cm 0.5cm 1.5cm}, clip]{figures.pdf}
+\end{center}
+\end{frame}
+
+\begin{frame}{Neurons, dendrites, and a synapse}
+\begin{center}
+	\includegraphics[page=26,width=\textwidth, trim={0.2cm 2.25cm 0.5cm 1.5cm}, clip]{figures.pdf}
+\end{center}
+\end{frame}
+
+\begin{frame}{Postulates of synaptic plasticity}
+\begin{itemize}
+	\setlength\itemsep{1em}
+	\item When the pre-synaptic neuron is not firing, there will be no neurotransmitter in the gap and there will be no weight change. This applies to both excitatory and inhibitory synapses.
+	\item When the pre-synaptic neuron is firing, and the post-synaptic neuron is also firing, there will be neurotransmitter in the gap and the post-synaptic membrane voltage will be positive since the (SUM) is positive, and the number of neuroreceptors will gradually increase, thus increasing the weight. This applies to excitatory synapses. This is Hebb's rule.
+	\item When the pre-synaptic neuron is firing, and the post-synaptic neuron is not firing, there will be neurotransmitter in the gap and the post-synaptic membrane voltage will be negative since the (SUM) is negative and its number of neuroreceptors will gradually decrease, thus decreasing the weight. This applies to excitatory synapses.
+	\item The opposite of these rules apply to inhibitory synapses.
+\end{itemize}
+\end{frame}
+
+
+
+\end{document}

@@ -1,0 +1,115 @@
+%%% START MACRO %%%
+\newcommand{\slopeTriangle}[5]
+{
+    % #1. Relative offset in x direction.
+    % #2. Width in x direction, so xA-xB.
+    % #3. Relative offset in y direction.
+    % #4. Slope dydx.
+    % #5. Plot options.
+
+    \pgfplotsextra
+    {
+        \pgfkeysgetvalue{/pgfplots/xmin}{\xmin}
+        \pgfkeysgetvalue{/pgfplots/xmax}{\xmax}
+        \pgfkeysgetvalue{/pgfplots/ymin}{\ymin}
+        \pgfkeysgetvalue{/pgfplots/ymax}{\ymax} 
+
+        % Calculate auxilliary quantities.
+        \pgfmathsetmacro{\xA}{\xmin+(#1+#2)*(\xmax-\xmin)}
+        \pgfmathsetmacro{\yA}{\ymin+#3*(\ymax-\ymin)}
+        \pgfmathsetmacro{\xB}{\xmin+#1*(\xmax-\xmin)}
+        \pgfmathsetmacro{\yB}{\yA}
+        \pgfmathsetmacro{\xC}{\xA}
+        \pgfmathsetmacro{\yC}{\yA+(\xA-\xB)*#4}
+
+        % Define coordinates for \draw.
+        \coordinate (A) at (axis cs:\xA,\yA);
+        \coordinate (B) at (axis cs:\xB,\yB);
+        \coordinate (C) at (axis cs:\xC,\yC);
+
+        % Draw slope triangle.
+        \draw[#5]   (A)-- node[pos=0.5,anchor=north, scale = 0.7] {1}
+                    (B)-- 
+                    (C)-- node[pos=0.5, scale=0.7] {$\gamma$}
+                    cycle;
+    }
+}
+%%% END MACRO %%%
+
+\tikzset{
+  double arrow/.style args={#1 colored by #2 and #3}{
+    >=stealth, ultra thick, ->,line width=(#1)/3,#2, % first arrow
+    postaction={draw,>=stealth, ultra thick, ->,#3,line width=(#1)/5,
+                shorten <=(#1)/5,shorten >=2*(#1)/5}, % second arrow
+  }
+}
+
+\def\intersect{9.999}
+\begin{tikzpicture} 
+\begin{axis}[
+axis lines*=middle,
+enlargelimits = true,
+xmax=15,
+xmin=-15,
+ymin=-1.5,
+ymax=1.5,
+axis line style={->},
+xlabel style={text width = 0.5cm, scale=0.7}, xlabel={\small $(X^TW)$},
+ylabel style={text width = 0.5cm, scale=0.7}, ylabel={\small Sigmoid Output},
+every axis x label/.style={
+    at={(ticklabel* cs:1)},
+    anchor=north,
+},
+every axis y label/.style={
+    at={(ticklabel* cs:1)},
+    anchor=south,
+},
+xtick=\empty,
+ytick={-1, 1},
+yticklabels={$-1$, $1$},
+yticklabel style={xshift=0.1cm},
+xtick={-\intersect, \intersect},
+xticklabel=\empty,
+%xmajorgrids,
+%ymajorgrids,
+every outer y axis line/.append style={white!15!black},
+every y tick label/.append style={font=\color{white!15!black}},
+legend style={draw=white!15!black,fill=white,legend cell align=left}]
+\addplot[name path = A, black, line width=1.5pt, domain=-17:17, samples=100] {-1+2/(1+exp(-x))};
+\addplot[name path = B, black, line width=1pt, domain=-17:17, samples=2] {0.1*x};
+
+
+\addplot[blue2!80] fill between[of=A and B, soft clip={domain=0:\intersect}];
+\addplot[blue2!80] fill between[of=A and B, soft clip={domain=-17:-\intersect}];
+\addplot[Qred!80] fill between[of=A and B, soft clip={domain=-\intersect:0}];
+\addplot[Qred!80] fill between[of=A and B, soft clip={domain=\intersect:17}];
+
+
+\node[draw,circle,minimum width = 0.3cm,inner sep=0pt, fill=white] at (4,0.7) {\textbf{$+$}};
+\node[draw,circle,minimum width = 0.3cm,inner sep=0pt, fill=white] at (-15,-1.25) {\textbf{$+$}};
+\node[draw,circle,minimum width = 0.3cm,inner sep=0pt, fill=white] at (-4,-0.7) {\textbf{$-$}};
+\node[draw,circle,minimum width = 0.3cm,inner sep=0pt, fill=white] at (15,1.25) {\textbf{$-$}};
+
+\node[coordinate,pin={[pin edge={solid, semithick}, align=center, scale=0.6, text width = 2.5cm, pin distance=0.5cm]-85:{Stable equilibrium point}}] at (axis cs:\intersect,1){};
+\node[coordinate,pin={[pin edge={solid, semithick}, align=center, scale=0.6, text width = 2.5cm]-75:{Unstable equilibrium point}}] at (axis cs:0,0){};
+\node[coordinate,pin={[pin edge={solid, semithick}, align=center, scale=0.6, text width = 2.5cm]95:{Stable equilibrium point}}] at (axis cs:-\intersect,-1){};
+\node[coordinate,pin={[pin edge={solid, semithick}, align=center, scale=0.6]105:{slope $\gamma$}}] at (axis cs:14,1.4){};
+\node[coordinate,pin={[pin edge={solid, semithick}, align=center, scale=0.6]-75:{slope $\gamma$}}] at (axis cs:-14,-1.4){};
+
+%\draw[double arrow = 7pt colored by white and blue2!120] (axis cs:7,0.85) -- (axis cs:9, 0.97);
+%\draw[white, line width = 0.9mm, ->, >=stealth] (axis cs:7,0.85) -- (axis cs:9, 0.97);
+\draw[blue2!20, line width = 0.6mm, ->, >=stealth, shorten <=1pt,shorten >=1pt] (axis cs:7,0.85) -- (axis cs:9, 0.97);
+
+%\draw[white, line width = 0.9mm, ->, >=stealth] (axis cs:13, 1.15) -- (axis cs:11,1.03);
+\draw[Qred!20, line width = 0.6mm, ->, >=stealth, shorten <=1pt,shorten >=1pt] (axis cs:13, 1.15) -- (axis cs:11,1.03);
+
+%\draw[white, line width = 0.9mm, ->, >=stealth] (axis cs:-7,-0.85) -- (axis cs:-9, -0.97);
+\draw[Qred!20, line width = 0.6mm, ->, >=stealth, shorten <=1pt,shorten >=1pt] (axis cs:-7,-0.85) -- (axis cs:-9, -0.97);
+
+%\draw[white, line width = 0.9mm, ->, >=stealth] (axis cs:-13, -1.15) -- (axis cs:-11,-1.03);
+\draw[blue2!20, line width = 0.6mm, ->, >=stealth, shorten <=1pt,shorten >=1pt] (axis cs:-13, -1.15) -- (axis cs:-11,-1.03);
+
+%\slopeTriangle{0.57}{0.07}{0.573}{0.1}{black}; % USE OF MACRO.
+
+\end{axis}
+\end{tikzpicture}

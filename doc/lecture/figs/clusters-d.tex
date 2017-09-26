@@ -1,0 +1,32 @@
+\def\Ax{-8}
+\def\Ay{15}
+\def\Bx{3}
+\def\By{-15}
+
+\begin{tikzpicture} 
+\begin{axis}[
+axis lines*=middle,
+enlargelimits = true,
+xmax=20,
+xmin=-20,
+ymin=-20,
+ymax=20,
+xtick=\empty,
+ytick=\empty,
+  ]
+  \pgfplotsinvokeforeach{1,...,100}{
+  \addplot[only marks, blue, fill=white] coordinates {({\Ax+invgauss(rnd, rnd)},{\Ay+invgauss(rnd, rnd)})};
+  \addplot[only marks, red, fill=white] coordinates {({\Bx+invgauss(rnd, rnd)},{\By+invgauss(rnd, rnd)})};
+  }
+
+\addplot[mark=*, only marks, black, mark size =3pt] coordinates {(\Ax,\Ay)};
+\addplot[mark=*, only marks, black, mark size =3pt] coordinates {(\Bx,\By)};
+  
+\node at (axis cs:\Ax-6,\Ay) [anchor=east] {\Large A};  
+\node at (axis cs:\Bx+6,\By) [anchor=west] {\Large B};  
+
+\addplot[black, line width = 1pt, domain=-50:50, samples=2] {-14+1.5*x};
+\node at (axis cs:20, 17) [anchor=south] {\Large $+$};
+\node at (axis cs:23, 14) [anchor=south] {\Large $-$};
+\end{axis}
+\end{tikzpicture}

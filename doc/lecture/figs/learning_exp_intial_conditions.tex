@@ -1,0 +1,128 @@
+\begin{tikzpicture}
+\begin{axis}[
+axis lines*=middle,
+enlargelimits = true,
+axis line style={->},
+xlabel style={text width = 0.5cm, scale=0.7}, xlabel={\small $(X^TW)$},
+ylabel style={text width = 0.5cm, scale=0.7}, ylabel={\small Sigmoid Output},
+every axis x label/.style={
+    at={(ticklabel* cs:1)},
+    anchor=north,
+},
+every axis y label/.style={
+    at={(ticklabel* cs:1)},
+    anchor=south,
+},
+xtick=\empty,
+ytick=\empty,
+xticklabel=\empty,
+yticklabel=\empty,
+xmax=5,
+xmin=-5,
+ymax=1.2,
+ymin=-1.2,
+every outer y axis line/.append style={white!15!black},
+every y tick label/.append style={font=\color{white!15!black}},
+legend style={draw=white!15!black,fill=white,legend cell align=left}]
+\addplot[gray, name path = A, black, line width=1pt, domain=-6:6, samples=50] {(1 - exp(-2*x))/(1 + exp(-2*x))};
+\addplot[gray, name path = A, black, line width=0.5pt, domain=-6:6, samples=2] {0.3*x};
+
+\addplot [color=green2, only marks, mark=star, line width = 1.5pt, mark size=4pt, forget plot]
+table[row sep=crcr]{
+	1.2049 0.83514 \\
+	6.3427 0.99999 \\
+	9.5248 1 \\
+	1.9315 0.95886 \\
+	4.1213 0.99947 \\
+	5.2604 0.99995 \\
+	3.1462 0.99631 \\
+	2.9045 0.99402 \\
+	5.4438 0.99996 \\
+	3.9238 0.99922 \\
+	1.2255 0.84126 \\
+	6.1231 0.99999 \\
+	0.41799 0.39523 \\
+	4.5207 0.99976 \\
+	1.5911 0.92033 \\
+	2.0125 0.9649 \\
+	1.2447 0.8468 \\
+	3.7051 0.99879 \\
+	5.2149 0.99994 \\
+	4.4333 0.99972 \\
+	9.2895 1 \\
+	1.8718 0.95376 \\
+	3.8262 0.99905 \\
+	3.3879 0.99772 \\
+	4.2188 0.99957 \\
+	2.3713 0.98272 \\
+	5.6295 0.99997 \\
+	11.6232 1 \\
+	3.7974 0.99899 \\
+	7.6905 1 \\
+	0.48676 0.45164 \\
+	7.1896 1 \\
+	7.0757 1 \\
+	4.1376 0.99949 \\
+	9.8504 1 \\
+	4.2193 0.99957 \\
+	7.8673 1 \\
+	4.3483 0.99967 \\
+	0.82362 0.67704 \\
+	9.2187 1 \\
+	0.52234 0.4795 \\
+	2.8783 0.9937 \\
+	1.3284 0.86886 \\
+	0.1326 0.13183 \\
+	7.8745 1 \\
+};
+
+\addplot [color=orange2, only marks, mark=star, line width = 1.5pt, mark size=4pt, forget plot]
+table[row sep=crcr]{
+	-9.9594 -1 \\
+	-5.9728 -0.99999 \\
+	-0.32759 -0.31635 \\
+	-2.1754 -0.97454 \\
+	-7.2578 -1 \\
+	-6.0416 -0.99999 \\
+	-3.5325 -0.99829 \\
+	-0.097481 -0.097174 \\
+	-3.8781 -0.99914 \\
+	-7.2676 -1 \\
+	-0.42272 -0.39922 \\
+	-5.9569 -0.99999 \\
+	-2.9095 -0.99408 \\
+	-1.5504 -0.91384 \\
+	-4.4754 -0.99974 \\
+	-1.2059 -0.83546 \\
+	-17.7175 -1 \\
+	-3.254 -0.99702 \\
+	-5.3958 -0.99996 \\
+	-5.0407 -0.99992 \\
+	-7.3742 -1 \\
+	-2.6891 -0.99081 \\
+	-9.2625 -1 \\
+	-3.4308 -0.99791 \\
+	-1.0805 -0.79338 \\
+	-3.3361 -0.99747 \\
+	-6.0204 -0.99999 \\
+	-3.1419 -0.99627 \\
+	-3.3617 -0.9976 \\
+	-3.1119 -0.99604 \\
+	-1.5888 -0.91997 \\
+	-2.2015 -0.97581 \\
+	-3.2387 -0.99693 \\
+	-2.1778 -0.97465 \\
+	-11.6565 -1 \\
+	-8.5916 -1 \\
+	-15.2291 -1 \\
+	-3.0446 -0.99548 \\
+	-5.5413 -0.99997 \\
+	-11.4804 -1 \\
+	-3.8097 -0.99902 \\
+	-6.6605 -1 \\
+	-9.3825 -1 \\
+	-8.9103 -1 \\
+	-7.0742 -1 \\
+};
+\end{axis}
+\end{tikzpicture}

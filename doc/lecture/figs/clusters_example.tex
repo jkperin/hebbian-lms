@@ -1,0 +1,38 @@
+\pgfmathsetseed{11}%
+\pgfmathsetmacro\Ax{invgauss(rnd, rnd)}
+\pgfmathsetmacro\Ay{invgauss(rnd, rnd)}
+\pgfmathsetmacro\Bx{invgauss(rnd, rnd)}
+\pgfmathsetmacro\By{invgauss(rnd, rnd)}
+\pgfmathsetmacro\Cx{invgauss(rnd, rnd)}
+\pgfmathsetmacro\Cy{invgauss(rnd, rnd)}
+\pgfmathsetmacro\Dx{invgauss(rnd, rnd)}
+\pgfmathsetmacro\Dy{invgauss(rnd, rnd)}
+
+\def\r{0.15}
+
+\begin{tikzpicture} 
+\begin{axis}[
+axis lines*=middle,
+enlargelimits = true, clip=true,
+axis equal,
+xtick=\empty,
+ytick=\empty,
+  ]
+  \draw[blue!20, fill=blue!20] (\Ax, \Ay) circle (4*\r);
+  \draw[red!20, fill=red!20] (\Bx, \By) circle (4*\r);
+  \draw[green2!20, fill=green2!20] (\Cx, \Cy) circle (4*\r);
+  \draw[orange2!20, fill=orange2!20] (\Dx, \Dy) circle (4*\r);
+  \pgfplotsinvokeforeach{1,...,100}{
+  \addplot[only marks, blue, fill=white] coordinates {({\Ax+\r*invgauss(rnd, rnd)},{\Ay+\r*invgauss(rnd, rnd)})};
+  \addplot[only marks, red, fill=white] coordinates {({\Bx+\r*invgauss(rnd, rnd)},{\By+\r*invgauss(rnd, rnd)})};
+  \addplot[only marks, green2, fill=white] coordinates {({\Cx+\r*invgauss(rnd, rnd)},{\Cy+\r*invgauss(rnd, rnd)})};
+  \addplot[only marks, orange2, fill=white] coordinates {({\Dx+\r*invgauss(rnd, rnd)},{\Dy+\r*invgauss(rnd, rnd)})};
+  }
+
+\addplot[mark=*, only marks, black, mark size =3pt] coordinates {(\Ax,\Ay)};
+\addplot[mark=*, only marks, black, mark size =3pt] coordinates {(\Bx,\By)};
+\addplot[mark=*, only marks, black, mark size =3pt] coordinates {(\Cx,\Cy)};
+\addplot[mark=*, only marks, black, mark size =3pt] coordinates {(\Dx,\Dy)};
+  
+\end{axis}
+\end{tikzpicture}
