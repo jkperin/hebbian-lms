@@ -1,6 +1,7 @@
 classdef NeuralNetwork < handle
     %% Neural network for pattern classification problems
     properties
+        numInputs % number of entries in the input layer
         numHiddenLayers % number of hidden layers
         numNeuronsHL % number of neurons in each hidden layer
         numNeuronsOut % number of neurons in the output layer
@@ -11,7 +12,6 @@ classdef NeuralNetwork < handle
         gamma = 0.3 % Gamma parameter of Hebbian-LMS neuron
         outputFcn='softmax' % function of output layer neurons: {'linear', 'sigmoid', 'softmax'} 
         hiddenFcn='sigmoid' % function of hidden layers neurons: {'sigmoid', 'rectifier'}
-        dataPartitioning = [0.7 0 0.3] % how much is allocated for training, validation, and testing
     end   
        
     properties (Hidden)
@@ -27,55 +27,48 @@ classdef NeuralNetwork < handle
     end
       
     methods
-        function obj = NeuralNetwork(numHiddenLayers, numNeuronsHL, numNeuronsOut)
+        function obj = NeuralNetwork(numInputs, numHiddenLayers, numNeuronsHL, numNeuronsOut)
             %% Constructor: 
+            % - numInputs: number of inputs
             % - numHiddenLayers: number of hidden layers
             % - numNeuronsHL: number of neurons in hidden layers
             % - numNeuronsOut: number of neurons in output layer
+            obj.numInputs = numInputs;
             obj.numHiddenLayers = numHiddenLayers;
             obj.numNeuronsHL = numNeuronsHL;
             obj.numNeuronsOut = numNeuronsOut;
                         
-            obj.reset(); % initialize all variables
+            obj.initialize(1); % initialize all variables
             
             obj.set_functions();
         end
        
-        function [train, valid, test] = train(self, X, D, algorithm, adaptationConstant, varargin)
-            %% Train neural network with inputs |X|, desired response |D|, and algorithm |algorithm|
+        function [train_error, test_error] = train(self, X_train, D_train, X_test, D_test, algorithm, adaptationConstant, epochs, verbose, caption)
+            %% Train neural network with inputs "X_train", desired response "D_train", and algorithm "algorithm"
+            % After each pass through the training set, the network is
+            % tested on inputs "X_test" and "D_test" if available
             % Inputs:
-            % - X: input matrix. Each column of X is a input vector
-            % - D: desired response matrix. Each column of D is a desired
+            % - X_train: input matrix. Each column of X is a input vector
+            % - D_train: desired response matrix. Each column of D is a desired
+            % output vector
+            % - X_test: test set. Each column of X is a input vector. Can
+            % be empty
+            % - D_test: desired response matrix. Each column of D is a desired
             % output vector
             % - algorithm: either 'backpropagation', 'hebbian-lms', or
             % 'hebbian-lms-modified'
             % - adaptationConstant: adaptation constant
-            % - varargin{1}: has two meanings. If varargin < 1, varargin is
-            % interpreted as the desired training error rate. If varargin
-            % >= 1, varargin is interpreted as the number of training
-            % cycles i.e., how many times we go through the data (X, D).
-            % - varargin{2} (optional, default = true): whether to plot
+            % - epochs: number of training cycles i.e., how many times to 
+            % go through the data (X, D).
+            % - verbose (optional, default = false): whether to plot 
             % learning curve at the end of trainig
             
             self.set_functions(); % set hidden and output layers functions
-            
-            % Partition the data in training, validation, and testing sets
-            [train, valid, test] = self.partition_data(X, D); % Partitioning is not random
-            
-            if varargin{1} < 1 % interpret varargin as minimum error rate for training
-%                 min_error = varargin{1};
-                condition = @(x, n) x > min_error && n < self.maxNcycles;
-%                 condition = @(x, n) n < self.maxNcycles;
-                Ncycles = Inf;
-            else % interpret varargin as maximum number of training cycles
-                Ncycles = varargin{1}; 
-                condition = @(x, n) n < Ncycles;
-            end
-
+                     
             if length(adaptationConstant) == 1
                 adaptationConstant = adaptationConstant*ones(1, self.numHiddenLayers+1);
             end
-
+                        
             % Select training algorithm
             switch lower(algorithm)
                 case 'backpropagation'
@@ -89,38 +82,37 @@ classdef NeuralNetwork < handle
             end
             
             % Train
-            train.error = ones(1, min(self.maxNcycles, Ncycles));
-            valid.error = ones(1, min(self.maxNcycles, Ncycles));
-            test.error = ones(1, min(self.maxNcycles, Ncycles));
+            train_error = ones(1, min(self.maxNcycles, epochs));
+            if not(isempty(X_test))
+                test_error = ones(1, min(self.maxNcycles, epochs));
+            end
             n = 1;
-            while condition(train.error(n), n) 
-                for k = 1:size(train.X, 2) % go through the data
-                    trainingAlg(self, train.X(:, k), train.d(:, k)) 
+            while n <= epochs
+                for k = 1:size(X_train, 2) % go through the data
+                    trainingAlg(self, X_train(:, k), D_train(:, k)) 
                 end
 
-                train.error(n+1) = self.test(train.X, train.d);
+                train_error(n+1) = self.test(X_train, D_train);
                 fprintf('- Training cycle #%d\n', n)
-                fprintf('Training error = %G\n', train.error(n+1))
-                if self.dataPartitioning(2) ~= 0
-                    valid.error(n+1) = self.test(valid.X, valid.d);
-                    fprintf('Validation error = %G\n', valid.error(n+1))  
-                end
-                if self.dataPartitioning(3) ~= 0
-                    test.error(n+1) = self.test(test.X, test.d);
-                    fprintf('Testing error = %G\n', test.error(n+1))  
+                fprintf('Training error = %G\n', train_error(n+1))
+
+                if not(isempty(X_test))
+                    test_error(n+1) = self.test(X_test, D_test);
+                    fprintf('Testing error = %G\n', test_error(n+1))  
                 end                        
                 n = n + 1;
             end
             
             % Plot learning curve
-            if (length(varargin) == 1 && n > 2) || (length(varargin) == 2 && varargin{2} && n > 2) % whether to plot learning curve
-                figure(1), hold on, box on
-                hplot = plot(1:n-1, 100*train.error(2:n), 'LineWidth', 2, 'DisplayName', sprintf('%s: Training error', algorithm));
-                if self.dataPartitioning(2) ~= 0
-                    plot(1:n-1, 100*valid.error(2:n), ':', 'Color', get(hplot, 'Color'), 'LineWidth', 2, 'DisplayName', sprintf('%s: Validation error', algorithm))
+            if exist('verbose', 'var') && verbose
+                if not(exist('caption', 'var'))
+                    caption = 'HLMS: training error';
                 end
-                if self.dataPartitioning(3) ~= 0
-                    plot(1:n-1, 100*test.error(2:n), '--', 'Color', get(hplot, 'Color'), 'LineWidth', 2, 'DisplayName', sprintf('%s: Testing error', algorithm))
+                
+                figure(1), hold on, box on
+                hplot = plot(1:n-1, 100*train_error(2:n), 'LineWidth', 2, 'DisplayName', caption);
+                if not(isempty(X_test))
+                    plot(1:n-1, 100*test_error(2:n), '--', 'Color', get(hplot, 'Color'), 'LineWidth', 2, 'HandleVisibility','off')
                 end
                 xlabel('Training cycles')
                 ylabel('Error rate %')
@@ -140,7 +132,6 @@ classdef NeuralNetwork < handle
             self.forward(X); % calculate responses for input X
             
             % Updates first layer
-            X = [X; zeros(self.numNeuronsHL-size(X, 1), 1)];
             delta = -(self.Y{1} - self.gamma*self.S{1}).*(self.dfHL(self.S{1})  - self.gamma);
             self.W{1} = self.W{1} + 2*mu(1)*delta*X.';
             self.b{1} = self.b{1} + 2*mu(1)*delta;    
@@ -168,7 +159,6 @@ classdef NeuralNetwork < handle
             self.forward(X); % calculate responses for input X
             
             % Updates first layer
-            X = [X; zeros(self.numNeuronsHL-size(X, 1), 1)];
             delta = (self.Y{1} - self.gamma*self.S{1});
             self.W{1} = self.W{1} + 2*mu(1)*delta*X.';
             self.b{1} = self.b{1} + 2*mu(1)*delta;    
@@ -205,7 +195,6 @@ classdef NeuralNetwork < handle
             
             % Update first layer
             delta{1} = (self.W{2}.'*delta{2}).*self.dfHL(self.S{1});
-            X = [X; zeros(self.numNeuronsHL-size(X, 1), 1)];
             self.W{1} = self.W{1} + 2*mu(1)*delta{1}*X.';
             self.b{1} = self.b{1} + 2*mu(1)*delta{1};            
         end
@@ -228,8 +217,6 @@ classdef NeuralNetwork < handle
         
         function [y, Sout] = forward(self, X, verbose)
             %% Calculate outputs of the neural network (forward propagation)
-            X = [X; zeros(self.numNeuronsHL-size(X, 1), 1)];
-            
             % First layer
             self.S{1} = self.W{1}*X + self.b{1};
             self.Y{1} = self.fHL(self.S{1});
@@ -262,9 +249,7 @@ classdef NeuralNetwork < handle
             % - Consis: consistency of each cluster i.e., how many distinct
             % binary words represent that cluster
             % - Nwords: number of unique binary words at the output of each
-            % layer
-            X = [X; zeros(self.numNeuronsHL-size(X, 1), size(X, 2))];
-                 
+            % layer                
             Nclusters = max(Cidx);
             Consis = zeros(Nclusters, self.numHiddenLayers);
             Nwords = zeros(1, self.numHiddenLayers);
@@ -407,55 +392,69 @@ classdef NeuralNetwork < handle
 %             y = 2*exp(2*x)./(1 + exp(2*x)).^2;
         end 
         
-        function [train, valid, test] = partition_data(self, X, d)
-            %% Partition data into trainig, validation, and testing
+        function [train, test] = partition_data(self, X, d, dataPartitioning)
+            %% Partition data into trainig and testing
             % Partition ratios are given by the property dataPartitioning
             % Patitioning is not random. To partition the data randomly, it
             % is necessary to scramble X and d first
             N = size(X, 2);
             
             % Training
-            train.idx = 1:self.dataPartitioning(1)*N;
+            train.idx = 1:dataPartitioning(1)*N;
             train.X = X(:, train.idx);
             train.d = d(:, train.idx);
             idxend = train.idx(end);
-            
-            % Validation
-            if self.dataPartitioning(2) == 0
-                valid = [];
-            else
-                valid.idx = idxend + (1:self.dataPartitioning(2)*N);
-                valid.X = X(:, valid.idx);
-                valid.d = d(:, valid.idx);
-                idxend = valid.idx(end);
-            end
-            
+                        
             % Testing
-            if self.dataPartitioning(3) == 0
+            if self.dataPartitioning(2) == 0
                 test = [];
             else
-                test.idx = idxend + (1:self.dataPartitioning(3)*N);
+                test.idx = idxend + (1:dataPartitioning(2)*N);
                 test.X = X(:, test.idx);
                 test.d = d(:, test.idx);
             end
         end
         
-        function obj = reset(obj, stdw)
-            %% Reset weights of neural network            
+        function seed = initialize(obj, stdw, seed)
+            %% Reset weights of neural network
+            if exist('seed', 'var')
+                rng(seed)
+            end
+            seed = rng;
+                           
             if not(exist('stdw', 'var'))
                 stdw = 1;
+            end                
+            
+            if length(stdw) == 1
+                stdw = ones(obj.numHiddenLayers+1, 1);
+            elseif strcmpi(stdw, 'hlms')
+                N = [obj.numInputs obj.numNeuronsHL*ones(1, obj.numHiddenLayers)]; 
+                stdw = 1./(2*obj.gamma*sqrt(N));
+            elseif strcmpi(stdw, 'glorot')
+                fan_in = [obj.numInputs obj.numNeuronsHL*ones(1, obj.numHiddenLayers)];
+                fan_out = [obj.numNeuronsHL*ones(1, obj.numHiddenLayers) obj.numNeuronsOut];
+                stdw = sqrt(2./(fan_in + fan_out));
+            elseif length(stdw) == 1
+                stdw = stdw*ones(obj.numHiddenLayers+1, 1);             
             end
             obj.W = cell(obj.numHiddenLayers+1, 1);
             obj.b = cell(obj.numHiddenLayers+1, 1);
             obj.S = cell(obj.numHiddenLayers+1, 1);
             obj.Y = cell(obj.numHiddenLayers+1, 1);
-            for k = 1:obj.numHiddenLayers
-                obj.W{k} = stdw*randn(obj.numNeuronsHL); 
+            
+            obj.W{1} = stdw(1)*randn(obj.numNeuronsHL, obj.numInputs); 
+            obj.b{1} = zeros(obj.numNeuronsHL, 1);
+            obj.S{1} = zeros(obj.numNeuronsHL, 1);
+            obj.Y{1} = zeros(obj.numNeuronsHL, 1);
+            
+            for k = 2:obj.numHiddenLayers
+                obj.W{k} = stdw(k)*randn(obj.numNeuronsHL); 
                 obj.b{k} = zeros(obj.numNeuronsHL, 1);
                 obj.S{k} = zeros(obj.numNeuronsHL, 1);
                 obj.Y{k} = zeros(obj.numNeuronsHL, 1);
             end
-            obj.W{obj.numHiddenLayers+1} = stdw*randn(obj.numNeuronsOut, obj.numNeuronsHL);
+            obj.W{obj.numHiddenLayers+1} = stdw(end)*randn(obj.numNeuronsOut, obj.numNeuronsHL);
             obj.b{obj.numHiddenLayers+1} = zeros(obj.numNeuronsOut, 1);
             obj.S{obj.numHiddenLayers+1} = zeros(obj.numNeuronsOut, 1);
             obj.Y{obj.numHiddenLayers+1} = zeros(obj.numNeuronsOut, 1);
